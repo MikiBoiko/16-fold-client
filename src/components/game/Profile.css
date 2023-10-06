@@ -1,0 +1,43 @@
+.Profile {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0.5rem;
+}
+
+.Profile-tag {
+    display: flex;
+    align-items: center;
+}
+
+.Profile-icon {
+    --icon-size: 2.5rem;
+
+    height: var(--icon-size);
+    width: var(--icon-size);
+
+    background-color: white;
+}
+
+.Profile-user {
+    padding: 0 0.5rem;
+
+    line-height: 1.25rem;
+
+    justify-content: center;
+}
+
+.Profile-username {
+    text-decoration: underline;
+}
+
+.Profile-elo {
+    font-size: 0.8rem;
+}
+
+.Profile-time-and-actions {
+    
+}

@@ -1,0 +1,27 @@
+.Card {
+    z-index: 3;
+
+    position: relative;
+
+    aspect-ratio: 1.25;
+    width: 90%;
+
+    background-image: url("../../../images/game/card_back.png");
+    background-size: cover;
+    background-position: center;
+    background-color: var(--ion-color-tertiary-contrast);
+
+    display: flex;
+
+    border-radius: 10%;
+
+    align-items:flex-end;
+    justify-content: flex-end;
+
+    filter: drop-shadow(0 0 0.15rem rgba(0, 0, 0, 0.336));
+}
+
+.Card-value {
+    padding: 0.5rem;
+    font-size: 1.25rem;
+}

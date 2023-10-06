@@ -1,0 +1,24 @@
+.Game {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    max-width: 60rem;
+    align-items: center;
+    
+    margin-left: 50%;
+    transform: translateX(-50%);
+}
+
+#game {
+    display: flex;
+}
+
+#chat, #game {
+    width: 50%;
+    margin: 0.5rem;
+}
+
+#chat {
+    max-height: 760px;
+    height: calc(100% - 2rem);
+}

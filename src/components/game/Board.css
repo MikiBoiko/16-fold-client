@@ -1,0 +1,15 @@
+.Board {
+    aspect-ratio: 7 / 4;
+    width: 100%;
+    display: flex;
+}
+
+.Board-row {
+    display: flex;
+    width: 100%;
+}
+
+.Board-column {
+    aspect-ratio: 1.25;
+    width: calc(100% / 4);
+}

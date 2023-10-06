@@ -1,0 +1,14 @@
+{
+  "short_name": "16 Fold",
+  "name": "16 Fold App",
+  "icons": [
+    {
+      "src": "assets/icon/favicon.ico",
+      "type": "image/ico"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#ffffff",
+  "background_color": "#ffffff"
+}

@@ -1,0 +1,25 @@
+button,
+textarea {
+    font: inherit;
+    border: 0;
+    outline: 0;
+    background-color: inherit;
+    padding: 0;
+    cursor: inherit;
+    outline: inherit;
+}
+
+.Tile {
+    aspect-ratio: 1.25;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.Tile-Icon {
+    z-index: 5;
+    aspect-ratio: 1;
+    height: 10%;
+    position: fixed;
+}

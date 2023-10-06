@@ -1,0 +1,63 @@
+.Chat {
+    height: 100%;
+    max-width: 500px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.Chat-decisions {
+    display: flex;
+    justify-content: center;
+}
+
+.Chat-messages {
+    padding: 0.5rem;
+
+    height: 100%;
+
+    display: flex;
+    justify-content: flex-end;
+    flex-direction: column;
+
+    overflow-y: auto;
+}
+
+.Chat-user-message, .Chat-game-message {
+    padding: 0.25rem;
+    overflow-wrap: break-word;
+}
+
+.Chat-messages {
+    padding: 0.5rem;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.Chat-user-message, .Chat-game-message {
+    padding: 0.25rem;
+    overflow-wrap: break-word;
+}
+
+.Chat-game-message {
+    font-style: italic;
+    color: var(--separator-color);
+}
+
+.Chat-user {
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.Chat-textarea, .Chat-button {
+    height: 100%;
+}
+
+.Chat-textarea {
+    resize: none;
+}
