@@ -1,6 +1,5 @@
-import { useContext, useEffect, useState } from "react"
-import gameContext from "../../../context/gameContext"
-import { GameContext } from "../../../types/game"
+import { IonChip } from "@ionic/react"
+import { useEffect, useState } from "react"
 
 const parsePlayerTime = (time: number) => {
     const timeClamped = time > 0 ? time : 0
@@ -25,42 +24,31 @@ const parsePlayerTime = (time: number) => {
 interface TimerProps {
     color: number,
     turn: number,
+    turnCount: number,
     timeLeft: number,
-    timeStamp: number | undefined
+    timeStamp: Date
 }
 
-const PlayerTimer = ({ color, turn, timeLeft, timeStamp }: TimerProps) => {
+const PlayerTimer = ({ color, turn, turnCount, timeLeft, timeStamp }: TimerProps) => {
     const [time, setTime] = useState<number>(timeLeft)
 
+    const timestampEnd: number = timeStamp.getTime() + timeLeft
     const isTurn = color === turn
-    const timestampEnd = (timeStamp ?? Date.now()) + time
 
     useEffect(() => {
-        if(timeStamp === undefined) {
-            console.log(timeLeft)
-            setTime(timeLeft)
-            return    
-        }
+        if (!isTurn || turnCount < 2) return
 
         const interval = setInterval(() => {
-            if (isTurn) {
-                console.log(timestampEnd)
-                setTime(timestampEnd - Date.now())
-            }
-            else {
-
-            }
+            setTime(timestampEnd - Date.now())
         }, 100)
 
         return () => clearInterval(interval)
-
-    }, [turn, timeStamp, timeLeft])
+    }, [timestampEnd, isTurn, turnCount])
 
     return (
-        <div>
+        <IonChip disabled={!isTurn}>
             {parsePlayerTime(time)}
-            {isTurn ? '(*)' : ''}
-        </div>
+        </IonChip>
     )
 }
 

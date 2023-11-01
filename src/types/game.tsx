@@ -17,7 +17,7 @@ interface CardState {
 
 interface PlayerState {
   username: string,
-  timerLeft: number
+  timeLeft: number
 }
 
 interface StartedResponse {
@@ -35,21 +35,22 @@ type BoardPositions = {
 }
 
 interface GameState {
-  startedResponse: StartedResponse | undefined,
-  endedResponse: EndedResponse | undefined,
-  boardState: BoardPositions | undefined,
+  startedResponse: StartedResponse | null,
+  endedResponse: EndedResponse | null,
+  boardState: BoardPositions | null,
   turn: number,
   turnCount: number,
   playerStates: PlayerState[],
-  lastTurnTimeStamp: number
+  timeStamp: Date
 }
 
 interface GameContext {
   viewColor: Color,
   connection: HubConnection | undefined,
-  playingColor: Color | undefined,
+  playingColor: Color,
   state: GameState | undefined,
-  setState: (state: GameState) => void
+  setState: (state: GameState) => void,
+  messages: Message[]
 }
 
 interface Action {
@@ -59,6 +60,15 @@ interface Action {
 
 type DataDictionary = {
   [K in string]: object | string | number | boolean | object[] | string[] | Symbol
+}
+
+interface Message {
+  type: string
+  content: string
+}
+
+interface UserMessage extends Message {
+  username: string
 }
 
 export type {
@@ -71,5 +81,7 @@ export type {
   CardState,
   TileState,
   GameContext,
-  Action
+  Action,
+  Message,
+  UserMessage
 }

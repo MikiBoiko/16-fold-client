@@ -2,6 +2,7 @@ import { BoardPositions } from "../../types/game"
 
 enum Color { red = 0, black = 1, none = 2, both = 3 }
 const colorNames = ["red", "black", "none", "both"]
+const reasonsName = ["agreed", "passing", "material", "time", "report", "illegal"]
 
 const numbers = ["7", "6", "5", "4", "3", "2", "1"]
 const letters = ["a", "b", "c", "d"]
@@ -30,7 +31,7 @@ type ColorDictionary<T extends number, U> = {
 const symbols: ColorDictionary<Color, string[]> = {
   [Color.red]: ["♥", "♦"],
   [Color.black]: ["♣", "♠"],
-  [Color.none]: [],
+  [Color.none]: ["♥", "♦"],
   [Color.both]: []
 }
 
@@ -70,4 +71,4 @@ const initialBoardState: BoardPositions = {
   "d7": null,
 }
 
-export { Color, colorNames, valueToCard, adjacentTo, numbers, letters, initialBoardState }
+export { Color, colorNames, reasonsName, valueToCard, adjacentTo, numbers, letters, initialBoardState }

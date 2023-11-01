@@ -1,6 +1,6 @@
 import { createContext } from "react"
 import { Color } from "../components/game/misc"
-import { GameContext } from "../types/game"
+import { GameContext, Message } from "../types/game"
 
 const gameNotInitializedError = () => {
   () => { console.error('Game context not initialized') }
@@ -9,9 +9,10 @@ const gameNotInitializedError = () => {
 const gameContext = createContext<GameContext>({
   viewColor: Color.red,
   connection: undefined,
-  playingColor: undefined,
+  playingColor: Color.none,
   state: undefined,
-  setState: () => { gameNotInitializedError() }
+  setState: () => { gameNotInitializedError() },
+  messages: []
 })
 
 export default gameContext

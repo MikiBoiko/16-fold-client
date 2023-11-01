@@ -65,7 +65,7 @@ const Board = () => {
   const onDoAction = useCallback(
     (actionRequest: Action) => {
       if (connection === undefined) return
-      console.log(actionRequest)
+
       connection.invoke("DoAction", actionRequest)
       onCancel()
     },
@@ -107,8 +107,8 @@ const Board = () => {
                 {
                   letters.map((letter, column) => {
                     const position = letter + number
-                    const value = board !== undefined && position in board
-                      ? board[position]
+                    const value = board !== undefined && position in (board || {})
+                      ? (board || {})[position]
                       : undefined
                     const index = row * 7 + column
 

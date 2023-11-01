@@ -13,23 +13,12 @@ interface ProfileProps {
 
 const Profile = ({ playerColor }: ProfileProps) => {
   const { state } = useContext<GameContext>(gameContext)
-  const { turn, turnCount, lastTurnTimeStamp, playerStates } = state ?? {
-    turn: undefined,
-    lastTurnTimeStamp: undefined,
-    playerStates: [
-      {
-        username: "Red player",
-        timerLeft: 0
-      },
-      {
-        username: "Black player",
-        timerLeft: 0
-      }
-    ]
-  }
 
-  const { username, timerLeft } = playerStates[playerColor]
+  if(state === undefined) return null
 
+  const { turn, turnCount, timeStamp, playerStates } = state
+
+  const { username, timeLeft } = playerStates[playerColor]
 
   return (
     <div
@@ -54,10 +43,11 @@ const Profile = ({ playerColor }: ProfileProps) => {
           ? null
           : (
             <PlayerTimer
-              turn={turn ?? 0}
               color={playerColor}
-              timeStamp={turnCount ?? 0 > 2 ? lastTurnTimeStamp ?? Date.now() : undefined}
-              timeLeft={timerLeft}
+              turn={turn || 0}
+              turnCount={turnCount || 0}
+              timeStamp={timeStamp}
+              timeLeft={timeLeft}
             />
           )
       }

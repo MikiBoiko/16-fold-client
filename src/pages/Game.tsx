@@ -8,80 +8,128 @@ import Board from "../components/game/Board"
 
 import Profile from "../components/game/Profile"
 import Chat from "../components/game/Chat"
-import { Color, initialBoardState } from "../components/game/misc"
+import { Color, colorNames, initialBoardState, reasonsName, valueToCard } from "../components/game/misc"
 
-import { BoardPositions, GameContext, GameData, GameState, StartedResponse } from "../types/game"
+import { BoardPositions, GameContext, GameData, GameState, Message, StartedResponse, UserMessage } from "../types/game"
 
 import "./Game.css"
 
+function gameStartedMessage(pickedCards: number[], playingColor: Color, startingTurn: number) {
+  const startingCards: string[] = [valueToCard(0, playingColor)]
+
+  pickedCards
+    .sort(function (a: number, b: number) {
+      return a - b
+    })
+    .forEach((value: number) => {
+      startingCards.push(valueToCard(value, playingColor))
+    })
+
+  return `Game started, ${colorNames[startingTurn]} starts. Playing cards: ${startingCards.toString()}`
+}
+
+function gameEndedMessage(result: number, way: number) {
+  return `Game ended. ${colorNames[result].toUpperCase()} won due to ${reasonsName[way]}.`
+}
+
 const Game = ({ url }: GameData) => {
+  //#region Chat
+  const [messages, setMessages] = useState<Message[]>([])
+
+  const onRecieveUserMessage = useCallback(
+    (data: UserMessage) => {
+      setMessages([...messages, { ...data, type: "user" }])
+    },
+    [messages, setMessages]
+  )
+
+  const onRecieveGameMessage = useCallback(
+    (data: string) => {
+      setMessages([...messages, { content: data, type: "game" }])
+    },
+    [messages, setMessages]
+  )
+  //#endregion
+
+  //#region Game state
   const [viewColor, setViewColor] = useState<Color>(Color.red)
-  const [connection, setConnection] = useState<HubConnection | undefined>()
-  const [playingColor, setPlayingColor] = useState<Color | undefined>()
+  const [playingColor, setPlayingColor] = useState<Color>(Color.none)
   const [state, setState] = useState<GameState | undefined>()
 
-  const nextTurn = useCallback((timestamp: number, timeLeft: number, boardState: BoardPositions | undefined = undefined) => {
-    console.log(boardState)
+  const nextTurn = useCallback((timeStamp: string, timeLeft: number, boardState: BoardPositions | undefined = undefined) => {
+    setState((state: GameState | undefined) => {
+      if (state === undefined) return undefined
 
-    if (state?.playerStates === undefined) return
+      const newBoardState = boardState || state.boardState
+      const nextTurn = (state.turn + 1) % 2
 
-    let playerStates = state.playerStates
+      const playerStates = state.playerStates
+      playerStates[state.turn].timeLeft = timeLeft
 
-    playerStates[state.turn].timerLeft = timeLeft
-
-    setState({
-      ...state,
-      boardState: (boardState === undefined) ? state.boardState : boardState,
-      turn: (state.turn + 1) % 2,
-      turnCount: state.turnCount + 1,
-      lastTurnTimeStamp: timestamp,
-      playerStates: playerStates
+      return {
+        ...state,
+        boardState: newBoardState,
+        turn: nextTurn,
+        turnCount: state.turnCount + 1,
+        timeStamp: new Date(timeStamp),
+        playerStates
+      }
     })
 
-  }, [state, setState])
-
-  const updateBoard = useCallback((boardState: BoardPositions) => {
-    console.log('updating board')
-    console.log(boardState)
-
-    if (state === undefined) {
-      console.error('Updating board without a state...')
-      return
-    }
-
-    setState({
-      ...state,
-      boardState
-    })
-  }, [state, setState])
+  }, [setState])
 
   const onRecieveGameStarted = useCallback((response: StartedResponse) => {
-    updateBoard(initialBoardState)
+    const { pickedCards, turn } = response
 
-    if (state === undefined) return
-
-    const { turn } = response
-
-    setState({
-      ...state,
-      turn: (turn as number)
+    setState((state: GameState | undefined) => {
+      if (state === undefined) return undefined
+      return {
+        ...state,
+        turn: (turn as number),
+        boardState: initialBoardState
+      }
     })
-  }, [state, updateBoard, setState])
+
+    onRecieveGameMessage(gameStartedMessage(pickedCards, playingColor, turn))
+  }, [setState, onRecieveGameMessage])
+
+  const onRecieveGameEnded = useCallback((response: any) => {
+    const { result, way } = response
+
+    onRecieveGameMessage(gameEndedMessage(result, way))
+  }, [onRecieveGameMessage])
 
   const onRecieveState = useCallback((response: GameContext) => {
-    const { playingColor, state } = response
+    const { playingColor, state } = response 
 
-    console.log(response)
+    if(state === undefined) return
 
-    setViewColor(playingColor || Color.red)
+    const { startedResponse, endedResponse } = response.state || { startedResponse: null, endedResponse: null }
+
+    if (startedResponse === null) {
+      onRecieveGameMessage('Waiting for game to start...')
+    }
+    else if (endedResponse === null) {
+      const { pickedCards, turn } = startedResponse
+      onRecieveGameMessage(gameStartedMessage(pickedCards, playingColor || Color.none, turn))
+    }
+    else {
+      const { result, way } = endedResponse
+      onRecieveGameMessage(gameEndedMessage(result, way))
+    }
+
+    setViewColor(playingColor)
     setPlayingColor(playingColor)
-    setState(state)
-  }, [setPlayingColor, setViewColor, setState])
+    setState({
+      ...state,
+      timeStamp: new Date(state.timeStamp)
+    })
+  }, [setPlayingColor, setViewColor, setState, onRecieveGameMessage])
+  //#endregion
 
+  //#region Actions callbacks
   const onRecieveMove = useCallback((response: any) => {
-    if (state?.boardState === undefined) return
-
-    console.log(response)
+    if (state === undefined || state.boardState === null) return
 
     const { data, timeStamp, timeLeft } = response
     const { from, to } = data
@@ -95,41 +143,66 @@ const Game = ({ url }: GameData) => {
 
   const onRecievePassing = useCallback((response: any) => {
     if (state === undefined) return
-    console.log(response)
-    const { timestamp, timeLeft } = response
-    nextTurn(timestamp, timeLeft)
+
+    const { timeStamp, timeLeft } = response
+    nextTurn(timeStamp, timeLeft)
   }, [state, nextTurn])
 
   const onRecieveAttack = useCallback((response: any) => {
-    console.log(state)
-
-    if (state?.boardState === undefined) return
+    if (state === undefined || state?.boardState === null) return
 
     console.log(response)
 
     const { data, timeStamp, timeLeft } = response
     const { defense, from, to } = data
-    const { topCard } = defense
+    const { topCard, cardValues } = defense
 
     const newBoardState = { ...state.boardState }
 
-    from.map((position: string, index: number) => {
+    from.map((position: string) => {
       delete newBoardState[position]
     })
 
-    console.log(topCard.state)
-
     newBoardState[to] = topCard.state
-
     nextTurn(timeStamp, timeLeft, newBoardState)
-  }, [state, nextTurn])
+
+    const attackingKey = Object.keys(cardValues)[0]
+    const defendingCard = valueToCard(cardValues[attackingKey].value, cardValues[attackingKey].color)
+    console.log(defendingCard)
+    let attackingCardValues = {...cardValues}
+    console.log(attackingCardValues)
+    delete attackingCardValues[attackingKey]
+    console.log(attackingCardValues)
+    const attackingCards: string[] = []
+    
+    Object.keys(attackingCardValues).forEach((cardPosition: any) => {
+      attackingCards.push(valueToCard(attackingCardValues[cardPosition].value, attackingCardValues[cardPosition].color))
+    })
+    console.log(attackingCards)
+
+    onRecieveGameMessage(`Attacked with: ${attackingCards.join(', ')}. Defended with ${defendingCard}.`,)
+  }, [state, nextTurn, onRecieveGameMessage])
 
   const onRecieveSee = useCallback((response: any) => {
     if (state === undefined) return
+
+    const { timeStamp, timeLeft } = response
     console.log(response)
-    const { timestamp, timeLeft } = response
-    nextTurn(timestamp, timeLeft)
+
+    console.log(timeStamp)
+
+    nextTurn(timeStamp, timeLeft)
   }, [state, nextTurn])
+
+  const onRecieveOwnerSee = useCallback((response: any) => {
+    const { card } = response.data
+
+    onRecieveGameMessage(`Seen card: ${valueToCard(card.value, card.color)}`)
+  }, [onRecieveGameMessage])
+  //#endregion
+
+  //#region Connection events
+  const [connection, setConnection] = useState<HubConnection | undefined>()
 
   useEffect(() => {
     const connection: HubConnection = new HubConnectionBuilder()
@@ -147,24 +220,33 @@ const Game = ({ url }: GameData) => {
   useEffect(() => {
     if (connection === undefined) return
 
+    function onRecieveError(response: any) { console.error(response) }
+
     connection.on("RecieveGameStarted", onRecieveGameStarted)
+    connection.on("RecieveGameEnded", onRecieveGameEnded)
     connection.on("RecieveState", onRecieveState)
-    connection.on("RecieveError", (response) => { console.error(response) })
     connection.on("RecieveMove", onRecieveMove)
     connection.on("RecievePassing", onRecievePassing)
     connection.on("RecieveAttack", onRecieveAttack)
     connection.on("RecieveSee", onRecieveSee)
+    connection.on("RecieveOwnerSee", onRecieveOwnerSee)
+    connection.on("RecieveError", onRecieveError)
+    connection.on("RecieveMessage", onRecieveUserMessage)
 
     return () => {
       connection.off("RecieveGameStarted", onRecieveGameStarted)
+      connection.off("RecieveGameEnded", onRecieveGameEnded)
       connection.off("RecieveState", onRecieveState)
-      connection.off("RecieveError")
       connection.off("RecieveMove", onRecieveMove)
       connection.off("RecievePassing", onRecievePassing)
       connection.off("RecieveAttack", onRecieveAttack)
       connection.off("RecieveSee", onRecieveSee)
+      connection.off("RecieveOwnerSee", onRecieveOwnerSee)
+      connection.off("RecieveError", onRecieveError)
+      connection.off("RecieveMessage", onRecieveUserMessage)
     }
   }, [connection, onRecieveState, onRecieveMove, onRecievePassing, onRecieveAttack, onRecieveSee])
+  //#endregion
 
   return (
     <gameContext.Provider
@@ -173,7 +255,8 @@ const Game = ({ url }: GameData) => {
         connection,
         playingColor,
         state,
-        setState
+        setState,
+        messages
       }}
     >
       <div className="Game">
