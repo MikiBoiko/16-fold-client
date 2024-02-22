@@ -5,6 +5,9 @@ import { IonButton, IonIcon, IonTextarea } from "@ionic/react"
 import { send } from 'ionicons/icons';
 import { HubConnection } from "@microsoft/signalr";
 import { Message, UserMessage } from "../../types/game";
+import reportIcon from "../../images/game/decisions/report.svg";
+import drawIcon from "../../images/game/decisions/draw.svg";
+import addTimeIcon from "../../images/game/decisions/add_time.svg";
 import "./Chat.css"
 
 const UserMessageElement = ({ username, content }: UserMessage) => {
@@ -28,7 +31,7 @@ const reportButton = (connection: HubConnection) => {
         }
       }
     >
-      ⚠ Report move
+      <IonIcon src={reportIcon} />Report
     </IonButton>
   )
 }
@@ -42,7 +45,7 @@ const addTimeButton = (connection: HubConnection) => {
         }
       }
     >
-      + Add time
+      <IonIcon src={addTimeIcon} /> Time
     </IonButton>
   )
 }
@@ -56,7 +59,7 @@ const drawButton = (connection: HubConnection) => {
         }
       }
     >
-      ½ Draw
+      <IonIcon src={drawIcon} /> Draw
     </IonButton>
   )
 }

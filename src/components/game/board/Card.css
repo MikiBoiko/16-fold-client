@@ -9,7 +9,7 @@
     background-image: url("../../../images/game/card_back.png");
     background-size: cover;
     background-position: center;
-    background-color: var(--ion-color-tertiary-contrast);
+    background-color: var(--ion-color-white);
 
     display: flex;
 

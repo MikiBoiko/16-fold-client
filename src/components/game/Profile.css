@@ -5,7 +5,7 @@
     align-items: center;
     justify-content: space-between;
 
-    padding: 0.5rem;
+    padding: 0 0.5rem;
 }
 
 .Profile-tag {
@@ -13,21 +13,23 @@
     align-items: center;
 }
 
+.Profile-icon > img {
+    aspect-ratio: 1;
+    width: 100%;
+}
+
 .Profile-icon {
-    --icon-size: 2.5rem;
-
-    height: var(--icon-size);
-    width: var(--icon-size);
-
     background-color: white;
 }
 
 .Profile-user {
+    display: flex;
+
     padding: 0 0.5rem;
 
     line-height: 1.25rem;
 
-    justify-content: center;
+    align-items: center;
 }
 
 .Profile-username {
@@ -36,8 +38,4 @@
 
 .Profile-elo {
     font-size: 0.8rem;
-}
-
-.Profile-time-and-actions {
-    
 }

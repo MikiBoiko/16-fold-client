@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="100%" height="100%" viewBox="0 0 100 100" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" xmlns:serif="http://www.serif.com/" style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
+    <g transform="matrix(1,0,0,1,7.10543e-15,-888.209)">
+        <g id="Board-Icon" serif:id="Board Icon" transform="matrix(0.493919,0,0,0.493919,45.7323,762.754)">
+            <rect x="-92.591" y="254" width="202.462" height="202.462" style="fill:none;"/>
+            <g transform="matrix(1.86254,0,0,1.86254,-84.4864,-1392.22)">
+                <path d="M90.043,958.231L90.043,918.188C90.043,907.18 81.142,898.236 70.151,898.166L70.022,898.166L29.978,898.166C18.928,898.166 9.957,907.137 9.957,918.188L9.957,958.231C9.957,969.281 18.928,978.253 29.978,978.253L70.022,978.253C81.072,978.253 90.043,969.281 90.043,958.231ZM83.979,938.209L83.979,958.231C83.979,965.934 77.725,972.188 70.022,972.188L50,972.188L50,938.209L83.979,938.209ZM16.021,938.209L16.021,918.188C16.021,910.484 22.275,904.23 29.978,904.23L50,904.23L50,938.209L16.021,938.209Z"/>
+            </g>
+        </g>
+    </g>
+</svg>

@@ -46,7 +46,7 @@ const PlayerTimer = ({ color, turn, turnCount, timeLeft, timeStamp }: TimerProps
     }, [timestampEnd, isTurn, turnCount])
 
     return (
-        <IonChip disabled={!isTurn}>
+        <IonChip style={{ backgroundColor: '#00000088' }} slot="end" color="red" disabled={!isTurn}>
             {parsePlayerTime(time)}
         </IonChip>
     )

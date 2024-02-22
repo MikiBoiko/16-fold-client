@@ -11,8 +11,7 @@ const Card = (card: CardState | null) => {
     )
   }
 
-  const { value, color } = card || {}
-
+  const { value, color } = card as CardState
   return (
     <div
       className="Card"
@@ -21,7 +20,7 @@ const Card = (card: CardState | null) => {
         border: "1px solid var(--ion-color-medium-tint)",
         color: color === Color.red
           ? "var(--ion-color-primary-shade)"
-          : "var(--ion-color-secondary-shade)"
+          : "var(--ion-color-black-shade)"
       }}
     >
       <div className="Card-value">

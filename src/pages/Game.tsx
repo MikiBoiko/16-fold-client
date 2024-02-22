@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useContext, useRef } from "react"
 import { HubConnection, HubConnectionBuilder } from "@microsoft/signalr"
 
 import { IonCard } from "@ionic/react"
@@ -10,9 +10,14 @@ import Profile from "../components/game/Profile"
 import Chat from "../components/game/Chat"
 import { Color, colorNames, initialBoardState, reasonsName, valueToCard } from "../components/game/misc"
 
-import { BoardPositions, GameContext, GameData, GameState, Message, StartedResponse, UserMessage } from "../types/game"
+import { BoardPositions, EndedResponse, GameContext, GameData, GameState, Message, StartedResponse, UserMessage } from "../types/game"
 
 import "./Game.css"
+import { useParams } from "react-router"
+import axios from "axios"
+import appContext from "../context/appContext"
+import { HTTP_URL } from "../socket"
+import { TabLayout } from "../components/game/Layout"
 
 function gameStartedMessage(pickedCards: number[], playingColor: Color, startingTurn: number) {
   const startingCards: string[] = [valueToCard(0, playingColor)]
@@ -32,7 +37,27 @@ function gameEndedMessage(result: number, way: number) {
   return `Game ended. ${colorNames[result].toUpperCase()} won due to ${reasonsName[way]}.`
 }
 
-const Game = ({ url }: GameData) => {
+const Game = () => {
+  const { user } = useContext(appContext)
+  const { tag } = useParams<{ tag: string }>()
+  const [game, setGame] = useState<GameData>()
+
+  useEffect(() => {
+    if (user === undefined) return
+
+    const params = new URLSearchParams([['tag', tag]]);
+    axios.get(`${HTTP_URL}/games/fetch`, { params, headers: { "auth": `bearer ${user.publicToken}` } })
+      .then((result) => {
+        const { hostname, port, key, redUsername, blackUsername } = result.data
+        setGame({
+          url: `http://${hostname}:${port}`,
+          key,
+          redUsername,
+          blackUsername
+        })
+      })
+  }, [user])
+
   //#region Chat
   const [messages, setMessages] = useState<Message[]>([])
 
@@ -93,16 +118,23 @@ const Game = ({ url }: GameData) => {
     onRecieveGameMessage(gameStartedMessage(pickedCards, playingColor, turn))
   }, [setState, onRecieveGameMessage])
 
-  const onRecieveGameEnded = useCallback((response: any) => {
+  const onRecieveGameEnded = useCallback((response: EndedResponse) => {
     const { result, way } = response
 
     onRecieveGameMessage(gameEndedMessage(result, way))
-  }, [onRecieveGameMessage])
+    setState((oldState) => {
+      if(oldState === undefined) return undefined
+      return {
+        ...oldState,
+        endedResponse: response
+      }
+    })
+  }, [onRecieveGameMessage, setState])
 
   const onRecieveState = useCallback((response: GameContext) => {
-    const { playingColor, state } = response 
+    const { playingColor, state } = response
 
-    if(state === undefined) return
+    if (state === undefined) return
 
     const { startedResponse, endedResponse } = response.state || { startedResponse: null, endedResponse: null }
 
@@ -118,7 +150,7 @@ const Game = ({ url }: GameData) => {
       onRecieveGameMessage(gameEndedMessage(result, way))
     }
 
-    setViewColor(playingColor)
+    setViewColor(playingColor === Color.none ? Color.red : playingColor)
     setPlayingColor(playingColor)
     setState({
       ...state,
@@ -163,18 +195,24 @@ const Game = ({ url }: GameData) => {
       delete newBoardState[position]
     })
 
-    newBoardState[to] = topCard.state
+    if (defense.result === 2) {
+      delete newBoardState[to]
+    }
+    else {
+      newBoardState[to] = topCard.state
+    }
+
     nextTurn(timeStamp, timeLeft, newBoardState)
 
     const attackingKey = Object.keys(cardValues)[0]
     const defendingCard = valueToCard(cardValues[attackingKey].value, cardValues[attackingKey].color)
     console.log(defendingCard)
-    let attackingCardValues = {...cardValues}
+    let attackingCardValues = { ...cardValues }
     console.log(attackingCardValues)
     delete attackingCardValues[attackingKey]
     console.log(attackingCardValues)
     const attackingCards: string[] = []
-    
+
     Object.keys(attackingCardValues).forEach((cardPosition: any) => {
       attackingCards.push(valueToCard(attackingCardValues[cardPosition].value, attackingCardValues[cardPosition].color))
     })
@@ -205,17 +243,20 @@ const Game = ({ url }: GameData) => {
   const [connection, setConnection] = useState<HubConnection | undefined>()
 
   useEffect(() => {
+    if (game === undefined) return
+
     const connection: HubConnection = new HubConnectionBuilder()
-      .withUrl(`${url}/game`)
+      .withUrl(`${game.url}/game`)
       .withAutomaticReconnect()
       .build()
 
     connection.start().then(() => {
-      connection.invoke("State")
+      console.log('Game key: ' + game.key)
+      connection.invoke("State", game.key)
     })
 
     setConnection(connection)
-  }, [setConnection])
+  }, [game])
 
   useEffect(() => {
     if (connection === undefined) return
@@ -248,9 +289,40 @@ const Game = ({ url }: GameData) => {
   }, [connection, onRecieveState, onRecieveMove, onRecievePassing, onRecieveAttack, onRecieveSee])
   //#endregion
 
+  const [gameSizeRatio, setGameSizeRatio] = useState(0)
+  const gameRef = useRef(null)
+
+  useEffect(() => {
+    if (gameRef.current === null) return
+    console.log(gameRef.current)
+    const { clientHeight, clientWidth } = gameRef.current
+    setGameSizeRatio(clientHeight / clientWidth)
+  })
+
+  const gameComponent = (
+    <IonCard
+      ref={gameRef}
+      id="game"
+      style={{
+        flexDirection: playingColor === Color.red
+          ? "column"
+          : "column-reverse"
+      }}
+    >
+      <Profile playerColor={Color.black} />
+      <Board />
+      <Profile playerColor={Color.red} />
+    </IonCard>
+  )
+
+  const chatComponent = (
+    <Chat />
+  )
+
   return (
     <gameContext.Provider
       value={{
+        data: game,
         viewColor,
         connection,
         playingColor,
@@ -259,23 +331,10 @@ const Game = ({ url }: GameData) => {
         messages
       }}
     >
-      <div className="Game">
-        <IonCard
-          id="game"
-          style={{
-            flexDirection: playingColor === Color.red
-              ? "column"
-              : "column-reverse"
-          }}
-        >
-          <Profile playerColor={Color.black} />
-          <Board />
-          <Profile playerColor={Color.red} />
-        </IonCard>
-        <IonCard id="chat" className="ion-padding">
-          <Chat />
-        </IonCard>
-      </div>
+      <TabLayout
+        game={gameComponent}
+        chat={chatComponent}
+      />
     </gameContext.Provider>
   )
 }

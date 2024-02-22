@@ -1,12 +1,15 @@
-import { IonButtons, IonContent, IonHeader, IonMenu, IonMenuButton, IonPage, IonTitle, IonToolbar } from '@ionic/react';
+import { IonButtons, IonContent, IonFooter, IonHeader, IonItem, IonList, IonMenu, IonMenuButton, IonNavLink, IonPage, IonText, IonTitle, IonToolbar } from '@ionic/react';
+import { useContext } from 'react';
+import appContext from '../context/appContext';
 
-interface NavbarData {
-  title: string,
-  user: string,
-  content: JSX.Element
+interface NavbarData extends React.PropsWithChildren {
+  title: string | JSX.Element,
+  children: JSX.Element | React.ReactNode
 }
 
-const Navbar = ({ title, user, content }: NavbarData) => {
+const Navbar = ({ title, children }: NavbarData) => {
+  const { user } = useContext(appContext)
+
   return (
     <>
       <IonMenu side="end" contentId="main-content">
@@ -15,7 +18,17 @@ const Navbar = ({ title, user, content }: NavbarData) => {
             <IonTitle>Menu</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="ion-padding">This is the menu content.</IonContent>
+        <IonContent>
+          <IonList>
+            <IonItem routerLink='/home'>
+              Home
+            </IonItem>
+            <IonItem routerLink={`/profile/${user?.username}`}>
+              {user?.username}
+            </IonItem>
+          </IonList>
+        </IonContent>
+        <IonFooter><div style={{ fontSize: '0.7rem', padding: '0.25rem' }}>Created by Luis Vizán and Miguel Montero.</div></IonFooter>
       </IonMenu>
       <IonPage id="main-content">
         <IonHeader>
@@ -26,7 +39,7 @@ const Navbar = ({ title, user, content }: NavbarData) => {
             <IonTitle>{title}</IonTitle>
           </IonToolbar>
         </IonHeader>
-        <IonContent className="ion-padding">{content}</IonContent>
+        <IonContent className="ion-padding">{children}</IonContent>
       </IonPage>
     </>
   )

@@ -1,10 +1,6 @@
 import { HubConnection } from "@microsoft/signalr"
 import { Color } from "../components/game/misc"
 
-interface GameData {
-  url: string
-}
-
 interface TileState {
   position: string,
   value: CardState | undefined | null
@@ -44,7 +40,15 @@ interface GameState {
   timeStamp: Date
 }
 
+interface GameData { 
+  url: string
+  key: string
+  redUsername: string
+  blackUsername: string 
+}
+
 interface GameContext {
+  data: GameData | undefined
   viewColor: Color,
   connection: HubConnection | undefined,
   playingColor: Color,
@@ -73,13 +77,13 @@ interface UserMessage extends Message {
 
 export type {
   GameState,
-  GameData,
   PlayerState,
   StartedResponse,
   EndedResponse,
   BoardPositions,
   CardState,
   TileState,
+  GameData,
   GameContext,
   Action,
   Message,

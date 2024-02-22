@@ -7,6 +7,7 @@ const gameNotInitializedError = () => {
 }
 
 const gameContext = createContext<GameContext>({
+  data: undefined,
   viewColor: Color.red,
   connection: undefined,
   playingColor: Color.none,

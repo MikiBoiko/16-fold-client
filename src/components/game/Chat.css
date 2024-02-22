@@ -1,6 +1,7 @@
 .Chat {
+    padding: 0.5rem;
+
     height: 100%;
-    max-width: 500px;
 
     display: flex;
     flex-direction: column;

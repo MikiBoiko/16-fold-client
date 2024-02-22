@@ -119,7 +119,7 @@ const Board = () => {
                         style={{
                           backgroundColor: index % 2 === 0
                             ? "var(--ion-color-tertiary)"
-                            : "var(--ion-color-tertiary-contrast)"
+                            : "var(--ion-color-tertiary-tint)"
                         }}>
                         <Tile
                           position={position}

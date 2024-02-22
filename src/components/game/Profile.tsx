@@ -3,43 +3,49 @@ import { Color } from "./misc";
 import { GameContext, PlayerState } from "../../types/game";
 import gameContext from "../../context/gameContext";
 import { IonButton, IonImg } from "@ionic/react";
-import profile from "../../images/game/profile.png"
+import profile from "../../images/profile.png"
 import "./Profile.css"
 import PlayerTimer from "./profile/PlayerTimer";
+import ProfileLink from "../ProfileLink";
+import ProfileIcon from "../ProfileIcon";
 
 interface ProfileProps {
   playerColor: Color
 }
 
 const Profile = ({ playerColor }: ProfileProps) => {
-  const { state } = useContext<GameContext>(gameContext)
+  const { state, data } = useContext<GameContext>(gameContext)
 
-  if(state === undefined) return null
+  if(state === undefined || data === undefined) return null
+
+  const { redUsername, blackUsername } = data
 
   const { turn, turnCount, timeStamp, playerStates } = state
 
-  const { username, timeLeft } = playerStates[playerColor]
+  const { timeLeft } = playerStates[playerColor]
+  const username = playerColor === Color.red ? redUsername : blackUsername
+  const gameEnded = state.endedResponse !== null
 
   return (
     <div
       className="Profile"
       style={{
-        backgroundColor: playerColor === Color.red ? "var(--ion-color-primary-shade)" : "var(--ion-color-secondary)",
-        color: playerColor === Color.red ? "var(--ion-color-primary-contrast)" : "var(--ion-color-secondary-contrast)"
+        backgroundColor: playerColor === Color.red ? "var(--ion-color-primary-shade)" : "var(--ion-color-black-shade)",
+        color: playerColor === Color.red ? "var(--ion-color-primary-contrast)" : "var(--ion-color-black-contrast)"
       }}>
       <div className="Profile-tag">
-        <IonImg className="Profile-icon" src={profile} alt="" />
+        <ProfileIcon className="Profile-icon" />
         <div className="Profile-user">
           <div className="Profile-username">
-            { username }
+            <ProfileLink username={username} />
           </div>
           <div className="Profile-elo">
-            1500?
+            · (1500?)
           </div>
         </div>
       </div>
       {
-        state === undefined
+        state === undefined || gameEnded === true
           ? null
           : (
             <PlayerTimer
