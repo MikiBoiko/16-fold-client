@@ -81,7 +81,14 @@ const Game = () => {
   const [playingColor, setPlayingColor] = useState<Color>(Color.none)
   const [state, setState] = useState<GameState | undefined>()
 
-  const nextTurn = useCallback((timeStamp: string, timeLeft: number, boardState: BoardPositions | undefined = undefined) => {
+  const nextTurn = useCallback((
+    timeStamp: string,
+    timeLeft: number,
+    lastMoveResolution: any,
+    boardState: BoardPositions | undefined,
+    count: boolean,
+    expectedMove: "EndSee" | null
+  ) => {
     setState((state: GameState | undefined) => {
       if (state === undefined) return undefined
 
@@ -94,10 +101,14 @@ const Game = () => {
       return {
         ...state,
         boardState: newBoardState,
-        turn: nextTurn,
-        turnCount: state.turnCount + 1,
+        turn: count === true ? nextTurn : state.turn,
+        turnCount: count === true ? state.turnCount + 1 : state.turnCount,
         timeStamp: new Date(timeStamp),
-        playerStates
+        playerStates,
+        expectedMove,
+        lastMoveResolution: {
+          ...lastMoveResolution
+        }
       }
     })
 
@@ -123,7 +134,7 @@ const Game = () => {
 
     onRecieveGameMessage(gameEndedMessage(result, way))
     setState((oldState) => {
-      if(oldState === undefined) return undefined
+      if (oldState === undefined) return undefined
       return {
         ...oldState,
         endedResponse: response
@@ -135,6 +146,8 @@ const Game = () => {
     const { playingColor, state } = response
 
     if (state === undefined) return
+
+    console.log(state)
 
     const { startedResponse, endedResponse } = response.state || { startedResponse: null, endedResponse: null }
 
@@ -170,14 +183,14 @@ const Game = () => {
     delete newBoardState[from]
     newBoardState[to] = state.boardState[from]
 
-    nextTurn(timeStamp, timeLeft, newBoardState)
+    nextTurn(timeStamp, timeLeft, response, newBoardState, true, null)
   }, [state, nextTurn])
 
   const onRecievePassing = useCallback((response: any) => {
     if (state === undefined) return
 
     const { timeStamp, timeLeft } = response
-    nextTurn(timeStamp, timeLeft)
+    nextTurn(timeStamp, timeLeft, response, undefined, true, null)
   }, [state, nextTurn])
 
   const onRecieveAttack = useCallback((response: any) => {
@@ -202,40 +215,47 @@ const Game = () => {
       newBoardState[to] = topCard.state
     }
 
-    nextTurn(timeStamp, timeLeft, newBoardState)
+    nextTurn(timeStamp, timeLeft, response, newBoardState, true, null)
 
     const attackingKey = Object.keys(cardValues)[0]
     const defendingCard = valueToCard(cardValues[attackingKey].value, cardValues[attackingKey].color)
-    console.log(defendingCard)
+
     let attackingCardValues = { ...cardValues }
-    console.log(attackingCardValues)
     delete attackingCardValues[attackingKey]
-    console.log(attackingCardValues)
     const attackingCards: string[] = []
 
     Object.keys(attackingCardValues).forEach((cardPosition: any) => {
       attackingCards.push(valueToCard(attackingCardValues[cardPosition].value, attackingCardValues[cardPosition].color))
     })
-    console.log(attackingCards)
 
     onRecieveGameMessage(`Attacked with: ${attackingCards.join(', ')}. Defended with ${defendingCard}.`,)
   }, [state, nextTurn, onRecieveGameMessage])
 
-  const onRecieveSee = useCallback((response: any) => {
+  const onRecieveStartSee = useCallback((response: any) => {
     if (state === undefined) return
 
     const { timeStamp, timeLeft } = response
     console.log(response)
-
-    console.log(timeStamp)
-
-    nextTurn(timeStamp, timeLeft)
+    
+    nextTurn(timeStamp, timeLeft, response, undefined, false, "EndSee")
   }, [state, nextTurn])
-
-  const onRecieveOwnerSee = useCallback((response: any) => {
+  
+  const onRecieveStartSeeOwner = useCallback((response: any) => {
+    if (state === undefined) return
+    
     const { card } = response.data
-
+    console.log(response)
+    
     onRecieveGameMessage(`Seen card: ${valueToCard(card.value, card.color)}`)
+  }, [onRecieveGameMessage])
+
+  const onRecieveEndSee = useCallback((response: any) => {
+    if (state === undefined) return
+    
+    const { timeStamp, timeLeft } = response
+    console.log(response)
+
+    nextTurn(timeStamp, timeLeft, response, undefined, true, null)
   }, [onRecieveGameMessage])
   //#endregion
 
@@ -251,7 +271,6 @@ const Game = () => {
       .build()
 
     connection.start().then(() => {
-      console.log('Game key: ' + game.key)
       connection.invoke("State", game.key)
     })
 
@@ -269,8 +288,9 @@ const Game = () => {
     connection.on("RecieveMove", onRecieveMove)
     connection.on("RecievePassing", onRecievePassing)
     connection.on("RecieveAttack", onRecieveAttack)
-    connection.on("RecieveSee", onRecieveSee)
-    connection.on("RecieveOwnerSee", onRecieveOwnerSee)
+    connection.on("RecieveStartSee", onRecieveStartSee)
+    connection.on("RecieveStartSeeOwner", onRecieveStartSeeOwner)
+    connection.on("RecieveEndSee", onRecieveEndSee)
     connection.on("RecieveError", onRecieveError)
     connection.on("RecieveMessage", onRecieveUserMessage)
 
@@ -281,12 +301,25 @@ const Game = () => {
       connection.off("RecieveMove", onRecieveMove)
       connection.off("RecievePassing", onRecievePassing)
       connection.off("RecieveAttack", onRecieveAttack)
-      connection.off("RecieveSee", onRecieveSee)
-      connection.off("RecieveOwnerSee", onRecieveOwnerSee)
+      connection.off("RecieveStartSee", onRecieveStartSee)
+      connection.off("RecieveStartSeeOwner", onRecieveStartSeeOwner)
+      connection.off("RecieveEndSee", onRecieveEndSee)
       connection.off("RecieveError", onRecieveError)
       connection.off("RecieveMessage", onRecieveUserMessage)
     }
-  }, [connection, onRecieveState, onRecieveMove, onRecievePassing, onRecieveAttack, onRecieveSee])
+  }, [
+    connection,
+    onRecieveGameStarted,
+    onRecieveGameEnded,
+    onRecieveState,
+    onRecieveMove,
+    onRecievePassing,
+    onRecieveAttack,
+    onRecieveStartSee,
+    onRecieveStartSeeOwner,
+    onRecieveEndSee,
+    onRecieveUserMessage
+  ])
   //#endregion
 
   const [gameSizeRatio, setGameSizeRatio] = useState(0)
@@ -294,7 +327,6 @@ const Game = () => {
 
   useEffect(() => {
     if (gameRef.current === null) return
-    console.log(gameRef.current)
     const { clientHeight, clientWidth } = gameRef.current
     setGameSizeRatio(clientHeight / clientWidth)
   })
@@ -331,6 +363,7 @@ const Game = () => {
         messages
       }}
     >
+      {state?.expectedMove}
       <TabLayout
         game={gameComponent}
         chat={chatComponent}

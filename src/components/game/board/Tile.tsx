@@ -2,7 +2,7 @@ import { useCallback, useContext, useEffect, useState } from "react"
 import Card from "./Card"
 import boardContext from "../../../context/boardContext"
 import gameContext from "../../../context/gameContext"
-import { CardState, TileState } from "../../../types/game"
+import { TileState } from "../../../types/game"
 import { Color, adjacentTo } from "../misc"
 import attack from "../../../images/game/actions/attack.svg"
 import move from "../../../images/game/actions/move.svg"
@@ -21,7 +21,8 @@ const tileMoveIcons: IconDictionary = {
   "Move": move,
   "Add": move,
   "Passing": passing,
-  "See": see
+  "StartSee": see,
+  "EndSee": see
 }
 
 const Tile = ({ position, value }: TileState) => {
@@ -31,6 +32,8 @@ const Tile = ({ position, value }: TileState) => {
   const { playingColor, state } = useContext(gameContext)
 
   const isTurn: boolean = (state?.turn ?? -1) === (playingColor ?? -2)
+  const hasEnded = state?.endedResponse !== null
+  const expectedMove = state?.expectedMove || null
 
   const {
     action,
@@ -44,7 +47,7 @@ const Tile = ({ position, value }: TileState) => {
   const [move, setMove] = useState("")
 
   const onClick = useCallback(() => {
-    if(!isTurn) return
+    if (!isTurn) return
 
     switch (move) {
       case "None":
@@ -60,9 +63,17 @@ const Tile = ({ position, value }: TileState) => {
           },
         })
         break
-      case "See":
+      case "StartSee":
         onDoAction({
-          type: "See",
+          type: "StartSee",
+          data: {
+            from: position
+          },
+        })
+        break
+      case "EndSee":
+        onDoAction({
+          type: "EndSee",
           data: {
             from: position
           },
@@ -117,8 +128,24 @@ const Tile = ({ position, value }: TileState) => {
   useEffect(() => {
     if (playingColor === Color.none || playingColor === Color.both) return
 
-    if(isTurn === false) {
+    if (isTurn === false || hasEnded === true) {
       setMove("None")
+      return
+    }
+
+    if (expectedMove !== null) {
+      switch (expectedMove) {
+        case "EndSee":
+          if(state?.lastActionResolution === null) return
+          if (state?.lastActionResolution.data.position === position) {
+            setMove("EndSee")
+          }
+          else setMove("None")
+          break;
+        default:
+          console.error("Wrong expected move type. " + expectedMove)
+          break;
+      }
       return
     }
 
@@ -134,8 +161,8 @@ const Tile = ({ position, value }: TileState) => {
         if (position === action.data.from) {
           if (position[1] === (playingColor === Color.red ? "7" : "1")) {
             setMove("Passing")
-          } 
-          else if (isHidden === true) setMove("See")
+          }
+          else if (isHidden === true) setMove("StartSee")
           else setMove("Cancel")
         } else if (adjacentTo(position, action.data["from"] as string)) {
           setMove(hasCard ? "Target" : "Move")
@@ -155,7 +182,7 @@ const Tile = ({ position, value }: TileState) => {
         console.error("Wrong action type.")
         break
     }
-  }, [isTurn, isHidden, action, playingColor, hasCard, setMove])
+  }, [isTurn, hasEnded, isHidden, action, playingColor, hasCard, expectedMove, state, setMove])
 
   const moveIcon: string = tileMoveIcons[move]
 
@@ -164,6 +191,7 @@ const Tile = ({ position, value }: TileState) => {
       className="Tile"
       onClick={() => onClick()}
     >
+      { move }
       {
         hasCard ? Card(value ?? null) : <></>
       }

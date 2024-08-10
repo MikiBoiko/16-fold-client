@@ -45,7 +45,7 @@ const Profile = ({ playerColor }: ProfileProps) => {
         </div>
       </div>
       {
-        state === undefined || gameEnded === true
+        state === undefined
           ? null
           : (
             <PlayerTimer

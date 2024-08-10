@@ -1,5 +1,7 @@
 import { IonChip } from "@ionic/react"
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
+import gameContext from "../../../context/gameContext"
+import { Color } from "../misc"
 
 const parsePlayerTime = (time: number) => {
     const timeClamped = time > 0 ? time : 0
@@ -30,6 +32,9 @@ interface TimerProps {
 }
 
 const PlayerTimer = ({ color, turn, turnCount, timeLeft, timeStamp }: TimerProps) => {
+    const { state } = useContext(gameContext)
+    const winnerColor = state?.endedResponse?.result
+
     const [time, setTime] = useState<number>(timeLeft)
 
     const timestampEnd: number = timeStamp.getTime() + timeLeft
@@ -47,7 +52,15 @@ const PlayerTimer = ({ color, turn, turnCount, timeLeft, timeStamp }: TimerProps
 
     return (
         <IonChip style={{ backgroundColor: '#00000088' }} slot="end" color="red" disabled={!isTurn}>
-            {parsePlayerTime(time)}
+            {
+                (winnerColor !== undefined)
+                    ? (winnerColor === color)
+                        ? "WINNER"
+                        : (winnerColor === Color.both) 
+                            ? "DRAW"
+                            : "LOSER"
+                    : parsePlayerTime(time)
+            }
         </IonChip>
     )
 }

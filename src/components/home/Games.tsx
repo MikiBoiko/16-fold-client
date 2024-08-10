@@ -11,7 +11,7 @@ const GameItem: React.FC<GameItemProps> = ({ game }) => {
             <ProfileLink username={game.rival} />
             {`(${game.format})`}
             <IonButtons slot="end">
-                <IonButton color="primary" fill="outline" routerLink={`/game/${game.tag}`}>
+                <IonButton color="primary" fill="outline" href={`/game/${game.tag}`}>
                     Play
                 </IonButton>
             </IonButtons>
@@ -26,7 +26,6 @@ const Games: React.FC = () => {
         if (socket === undefined) return
 
         socket.emit('fetch-games', {})
-        console.log('fetching games...')
     }, [socket])
 
     const gamesMapped = games.map((game: GameType, index: number) => {

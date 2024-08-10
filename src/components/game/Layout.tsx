@@ -1,9 +1,10 @@
 import { IonTabs, IonRouterOutlet, IonTabBar, IonTabButton, IonIcon, IonLabel, IonCard } from "@ionic/react"
 import boardIcon from "../../images/game/navegation/board.svg"
 import chatIcon from "../../images/game/navegation/chat.svg"
-import { Redirect, Route, useParams } from "react-router"
+import { Redirect, Route, RouteComponentProps, useParams } from "react-router"
+import { match as MatchType } from "react-router-dom"
 
-type GameLayoutProps = {
+interface GameLayoutProps {
     game: JSX.Element
     chat: JSX.Element
 }
@@ -22,8 +23,7 @@ const TabLayout = ({ game, chat }: GameLayoutProps) => {
     return (
         <IonTabs>
             <IonRouterOutlet>
-                <Redirect from={`/game/:tag`} to={`/game/${tag}/board`} />
-                <Route exact path="/game/:tag/board/">
+                <Route exact path="/game/:tag/board">
                     <div
                         style={{
                             width: "100%",
@@ -48,7 +48,7 @@ const TabLayout = ({ game, chat }: GameLayoutProps) => {
                         </div>
                     </div>
                 </Route>
-                <Route exact path="/game/:tag/chat/">
+                <Route exact path="/game/:tag/chat">
                     {chat}
                 </Route>
             </IonRouterOutlet>

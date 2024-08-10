@@ -37,7 +37,9 @@ interface GameState {
   turn: number,
   turnCount: number,
   playerStates: PlayerState[],
-  timeStamp: Date
+  timeStamp: Date,
+  expectedMove: "EndSee" | null
+  lastActionResolution: any
 }
 
 interface GameData { 

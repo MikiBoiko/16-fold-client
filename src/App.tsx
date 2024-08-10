@@ -145,6 +145,7 @@ const App: React.FC = () => {
 
     function onFetchGames(games: GameType[]) {
       console.log('fetch games')
+      console.log(games)
       updateGames(games)
     }
 
@@ -210,7 +211,7 @@ const App: React.FC = () => {
                       : <Redirect to="/login" />
                   }
                 </Route>
-                <Route path="/game">
+                <Route path="/game/:tag">
                   {
                     isLogged === true
                       ? <Navbar title="Game" children={<Game />} />
